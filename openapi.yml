@@ -1,74 +1,82 @@
 openapi: 3.0.3
 info:
-  title: Easyapp API
+  title: Simple Auth/Profile API
   version: 1.0.0
-  description: API documentation for easyapp
+servers:
+  - url: /
 paths:
-  /api/hello/:
-    get:
-      operationId: api_hello_retrieve
-      description: Get a hello world message
-      tags:
-      - api
-      security:
-      - {}
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
   /api/auth/register:
     post:
-      operationId: auth_register
-      tags:
-      - auth
       summary: Register a new member
+      tags: [Auth]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                password:
+                  type: string
+                  format: password
       responses:
         '201':
           description: Registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
+                $ref: '#/components/schemas/AuthResponse'
         '400':
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/auth/login:
     post:
-      operationId: auth_login
-      tags:
-      - auth
-      summary: Login and receive token
+      summary: Login and obtain a token
+      tags: [Auth]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
       responses:
         '200':
           description: Logged in
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
+                $ref: '#/components/schemas/AuthResponse'
         '400':
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/auth/logout:
     post:
-      operationId: auth_logout
-      tags:
-      - auth
-      summary: Logout and revoke current token
+      summary: Logout (invalidate current token)
+      tags: [Auth]
       security:
-      - memberTokenAuth: []
+        - TokenAuth: []
       responses:
         '204':
           description: Logged out
@@ -76,12 +84,10 @@ paths:
           description: Unauthorized
   /api/me:
     get:
-      operationId: me_get
-      tags:
-      - profile
       summary: Get current member profile
+      tags: [Profile]
       security:
-      - memberTokenAuth: []
+        - TokenAuth: []
       responses:
         '200':
           description: Current member
@@ -92,18 +98,16 @@ paths:
         '401':
           description: Unauthorized
     put:
-      operationId: me_update
-      tags:
-      - profile
       summary: Update current member profile
+      tags: [Profile]
       security:
-      - memberTokenAuth: []
+        - TokenAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProfileUpdateRequest'
+              $ref: '#/components/schemas/MemberUpdate'
       responses:
         '200':
           description: Updated member
@@ -113,23 +117,20 @@ paths:
                 $ref: '#/components/schemas/Member'
         '400':
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
 components:
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Use format 'Token <token>'
   schemas:
-    Message:
-      type: object
-      properties:
-        message:
-          type: string
-          maxLength: 200
-        timestamp:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - message
-      - timestamp
     Member:
       type: object
       properties:
@@ -145,68 +146,26 @@ components:
         created_at:
           type: string
           format: date-time
-      required:
-      - id
-      - name
-      - email
-      - phone
-      - created_at
-    RegisterRequest:
+    MemberUpdate:
       type: object
+      required: [name, email]
       properties:
         name:
           type: string
-          maxLength: 150
         email:
           type: string
           format: email
         phone:
           type: string
-        password:
-          type: string
-          minLength: 6
-      required:
-      - name
-      - email
-      - password
-    LoginRequest:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-      required:
-      - email
-      - password
-    ProfileUpdateRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 150
-        email:
-          type: string
-          format: email
-        phone:
-          type: string
-      required:
-      - name
-      - email
-    TokenResponse:
+    AuthResponse:
       type: object
       properties:
         token:
           type: string
         member:
           $ref: '#/components/schemas/Member'
-      required:
-      - token
-      - member
-  securitySchemes:
-    memberTokenAuth:
-      type: apiKey
-      in: header
-      name: Authorization
-      description: Use header as "Authorization: token <YOUR_TOKEN>"
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
