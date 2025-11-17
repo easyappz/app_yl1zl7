@@ -11,16 +11,110 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
+          description: ''
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
-          description: ''
+  /api/auth/register:
+    post:
+      operationId: auth_register
+      tags:
+      - auth
+      summary: Register a new member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation error
+  /api/auth/login:
+    post:
+      operationId: auth_login
+      tags:
+      - auth
+      summary: Login and receive token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid credentials
+  /api/auth/logout:
+    post:
+      operationId: auth_logout
+      tags:
+      - auth
+      summary: Logout and revoke current token
+      security:
+      - memberTokenAuth: []
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          description: Unauthorized
+  /api/me:
+    get:
+      operationId: me_get
+      tags:
+      - profile
+      summary: Get current member profile
+      security:
+      - memberTokenAuth: []
+      responses:
+        '200':
+          description: Current member
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '401':
+          description: Unauthorized
+    put:
+      operationId: me_update
+      tags:
+      - profile
+      summary: Update current member profile
+      security:
+      - memberTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Updated member
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
 components:
   schemas:
     Message:
@@ -36,11 +130,83 @@ components:
       required:
       - message
       - timestamp
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - name
+      - email
+      - phone
+      - created_at
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 6
+      required:
+      - name
+      - email
+      - password
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+      - email
+      - password
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+      required:
+      - name
+      - email
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        member:
+          $ref: '#/components/schemas/Member'
+      required:
+      - token
+      - member
   securitySchemes:
-    basicAuth:
-      type: http
-      scheme: basic
-    cookieAuth:
+    memberTokenAuth:
       type: apiKey
-      in: cookie
-      name: sessionid
+      in: header
+      name: Authorization
+      description: Use header as "Authorization: token <YOUR_TOKEN>"
