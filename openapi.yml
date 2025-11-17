@@ -35,11 +35,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         '400':
-          description: Validation error
+          description: Validation error (field-wise)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
   /api/auth/login:
     post:
       summary: Login and obtain a token
@@ -116,11 +120,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
         '400':
-          description: Validation error
+          description: Validation error (field-wise)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
         '401':
           description: Unauthorized
 components:

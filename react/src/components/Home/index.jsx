@@ -1,12 +1,15 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-/**
- * Для ИИ: Это заглушка. Обнови этот компонент. Здесь должен быть начальный экран приложения.
- */
 export default function Home() {
   return (
     <div data-easytag="id1-react/src/components/Home/index.jsx" className="card">
-      <div>This is home page</div>
+      <h2>Добро пожаловать</h2>
+      <p>Это простой сайт с регистрацией, авторизацией и профилем.</p>
+      <div className="row">
+        <Link className="button" to="/login">Войти</Link>
+        <Link className="button" to="/register">Зарегистрироваться</Link>
+      </div>
     </div>
   );
 }
